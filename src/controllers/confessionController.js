@@ -91,3 +91,22 @@ export const deleteConfession = async (req, res) => {
   }
 };
 
+export const getUserConfessions = async (req, res) => {
+  try {
+    const confessions = await Confession.find({ user: req.user.id })
+      .select('title body createdAt')
+      .sort({ createdAt: -1 });
+
+    res.json({
+      success: true,
+      count: confessions.length,
+      data: confessions
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message
+    });
+  }
+};
