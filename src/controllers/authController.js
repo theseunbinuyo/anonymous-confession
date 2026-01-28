@@ -22,9 +22,17 @@ export const signup = async (req, res) => {
 
     const user = await User.create({ username, email, password });
 
+    
+    const token = jwt.sign(
+      { id: user._id, username: user.username },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
     res.status(201).json({ 
       success: true,
       message: 'User created successfully',
+      token: token,  
       data: {
         id: user._id,
         username: user.username,
@@ -73,16 +81,10 @@ export const login = async (req, res) => {
       { expiresIn: '7d' }
     );
 
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000
-    });
-
     res.json({ 
       success: true,
       message: 'Login successful',
+      token: token,  
       data: {
         username: user.username,
         email: user.email
@@ -103,5 +105,24 @@ export const logout = (req, res) => {
     success: true,
     message: 'Logout successful' 
   });
-}
+};
 
+export const getMe = async (req, res) => {
+  try {
+    const user = req.user;
+    res.json({
+      success: true,
+      data: {
+        id: user._id,
+        username: user.username,
+        email: user.email
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message
+    });
+  }
+};
